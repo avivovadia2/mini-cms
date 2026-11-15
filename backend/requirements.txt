@@ -1,0 +1,10 @@
+# Pinned to the CMS's major/minor versions.
+Flask==2.3.3
+Werkzeug>=2.3.7,<3.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy>=2.0,<2.1
+Flask-Migrate==4.0.7
+spectree==2.0.3
+pydantic>=2,<3
+psycopg2-binary==2.9.13
+python-dotenv==1.2.4
