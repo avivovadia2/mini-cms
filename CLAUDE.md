@@ -28,9 +28,19 @@ react-router-dom 5.3, Vitest 2.1.
 ## Layout
 
 ```
-backend/    Flask app (app factory in app/__init__.py), migrations/, requirements.txt, pyproject.toml (ruff)
+backend/    Flask app (app factory in app/__init__.py), migrations/, tests/, requirements.txt, pyproject.toml (ruff)
 frontend/   Vite + React + TS app; dev server proxies /api to the backend
 ```
+
+Backend follows the CMS's **third-generation service modules** (see `backend/app/modules/__init__.py`):
+- One module per domain under `app/modules/<name>/`: `interface.py` (ABC), `schemas/`, `api/`, and a private
+  `internal/` (`service.py`, `managers/`, `models/`, `exceptions.py`).
+- Outside a module, only its `interface` and `schemas` may be imported — never `internal/`. Services are fetched with
+  `get_service(Interface)` from `app/registry.py` (deliberately no `@inject`/`Depends()`, permissions or events).
+- Each module exposes a `ModuleRegistration` that is listed in `MODULE_REGISTRATIONS`.
+- Managers never commit; the API layer commits. Current org comes from `current_user.organization_id`.
+- Tests: `backend/tests/modules/<name>/test_*.py`, `class Test<Thing>:` / `def test_<behaviour>`. The test DB
+  (`mini_cms_test`) is rebuilt from the migrations once per session and truncated after each test.
 
 ## Commands
 
