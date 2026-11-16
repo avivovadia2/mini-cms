@@ -9,11 +9,9 @@ A small claims app (policies → FNOL → claims → exposures) built on the sam
 
 ## How Claude should help (important)
 
-- **Mix mode:** Claude may scaffold boilerplate (configs, tooling, app wiring, build setup). The author writes the
-  business logic, models, migrations' content decisions, API schemas, and tests. When a task touches those, explain the
-  approach, point to CMS patterns, and review — don't just generate the solution unless explicitly asked.
-- Whatever Claude writes must be small and explainable; walk through it after writing.
-- Never copy CMS code. Reading it for patterns is fine.
+- Claude may write any of the code (models, logic, API, tests, tooling). After writing, walk the author through it
+  so they can explain every line in review — keep it small and explainable.
+- **Never copy CMS code.** Read the CMS (`~/projects/github/cms`) for patterns and conventions, then write original code.
 - No over-engineering: no generic repositories, plugin systems, or abstract base classes nothing needs.
   Three similar lines beat a premature abstraction.
 
@@ -58,6 +56,8 @@ Frontend (from `frontend/`):
 ## Rules the code must follow (from the spec)
 
 - Schema changes only through Alembic migrations — never `db.create_all()`. One migration per milestone PR.
+- Models use the CMS style: `db.Column(...)` with explicit `nullable=False` and `id` declared in each model
+  (not `Mapped`/`mapped_column`). `TimestampMixin` (`app/db_base.py`) adds `created_at`/`updated_at`.
 - All API routes live under `/api`, are declared with spectree, and use Pydantic request/response models.
 - Multi-tenancy: every table except `organization` has `organization_id`; every query is scoped to the current
   user's org. Another org's resource → **404**, never 403. A cross-org data leak is a project failure.

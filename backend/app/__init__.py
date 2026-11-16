@@ -1,6 +1,7 @@
 from flask import Flask
 
 from app.config import Config
+from app.errors import register_error_handlers
 from app.extensions import api_spec, db, login_manager, migrate
 from app.registry import register_service
 
@@ -13,6 +14,7 @@ def create_app(config_class: type = Config) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    register_error_handlers(app)
 
     from app.api import api_bp
 
