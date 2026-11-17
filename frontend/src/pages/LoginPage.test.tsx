@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp } from '../tests/renderApp'
+import { ME, renderApp, userInfo, usersPage } from '../tests/renderApp'
 
 async function logIn(user: UserEvent, email: string, password: string) {
   await user.type(screen.getByLabelText('Email'), email)
@@ -12,8 +12,10 @@ async function logIn(user: UserEvent, email: string, password: string) {
 
 describe('LoginPage', () => {
   test('bad credentials show the error message and stay on the login screen', async () => {
-    const { user } = renderApp('/login', (server) => {
-      server.onPost('/auth/login').reply(401, { message: 'Invalid email or password' })
+    const { user } = renderApp('/login', {
+      mockApi: (server) => {
+        server.onPost('/auth/login').reply(401, { message: 'Invalid email or password' })
+      },
     })
 
     await logIn(user, 'dana@acme.com', 'wrong-password')
@@ -23,9 +25,11 @@ describe('LoginPage', () => {
   })
 
   test('valid credentials are sent and land in the app', async () => {
-    const { api, user } = renderApp('/login', (server) => {
-      server.onPost('/auth/login').reply(200, ME)
-      server.onGet('/auth/me').reply(200, ME)
+    const { api, user } = renderApp('/login', {
+      mockApi: (server) => {
+        server.onPost('/auth/login').reply(200, ME)
+        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+      },
     })
 
     await logIn(user, 'dana@acme.com', 'correct-horse')
@@ -35,6 +39,20 @@ describe('LoginPage', () => {
       email: 'dana@acme.com',
       password: 'correct-horse',
     })
+  })
+
+  test('after logging in, the user returns to the page they asked for', async () => {
+    const { user } = renderApp('/policies', {
+      mockApi: (server) => {
+        server.onPost('/auth/login').reply(200, ME)
+      },
+    })
+
+    // Sent to Login first, because there is no session.
+    await screen.findByRole('heading', { name: 'Log in' })
+    await logIn(user, 'dana@acme.com', 'correct-horse')
+
+    expect(await screen.findByRole('heading', { name: 'Policies' })).toBeInTheDocument()
   })
 
   test('an invalid email is caught before anything is sent', async () => {

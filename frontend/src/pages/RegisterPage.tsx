@@ -4,6 +4,7 @@ import * as yup from 'yup'
 
 import { register } from '../api/auth'
 import { toApiError } from '../api/errors'
+import { useAuth } from '../auth/authContext'
 import { AuthCard } from '../components/AuthCard'
 import { Button } from '../components/Button'
 import { FormError } from '../components/FormError'
@@ -39,14 +40,15 @@ const initialValues: RegisterValues = {
 
 export function RegisterPage() {
   const history = useHistory()
+  const { setMe } = useAuth()
 
   async function handleSubmit(values: RegisterValues, helpers: FormikHelpers<RegisterValues>) {
     helpers.setStatus(undefined)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirm_password, ...request } = values
     try {
-      await register(request)
-      history.push('/') // the backend logged the new user in
+      setMe(await register(request)) // the backend logged the new user in
+      history.replace('/')
     } catch (error) {
       const apiError = toApiError(error)
       if (apiError.status === 409) {

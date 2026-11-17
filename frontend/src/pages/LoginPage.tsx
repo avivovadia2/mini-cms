@@ -1,9 +1,10 @@
 import { Form, Formik, type FormikHelpers } from 'formik'
-import { Link, useHistory } from 'react-router-dom'
+import { Link, useHistory, useLocation } from 'react-router-dom'
 import * as yup from 'yup'
 
 import { login, type LoginRequest } from '../api/auth'
 import { toApiError } from '../api/errors'
+import { useAuth } from '../auth/authContext'
 import { AuthCard } from '../components/AuthCard'
 import { Button } from '../components/Button'
 import { FormError } from '../components/FormError'
@@ -18,14 +19,23 @@ const loginSchema = yup.object({
 
 const initialValues: LoginRequest = { email: '', password: '' }
 
+// Where <RequireAuth> was sending the user before redirecting them here.
+interface LoginLocationState {
+  from?: { pathname: string; search: string }
+}
+
 export function LoginPage() {
   const history = useHistory()
+  const location = useLocation<LoginLocationState | undefined>()
+  const { setMe } = useAuth()
 
   async function handleSubmit(values: LoginRequest, helpers: FormikHelpers<LoginRequest>) {
     helpers.setStatus(undefined)
     try {
-      await login(values)
-      history.push('/')
+      setMe(await login(values))
+      // Back to the page they asked for; replace (not push) so Back doesn't return to Login.
+      const from = location.state?.from
+      history.replace(from ? `${from.pathname}${from.search}` : '/')
     } catch (error) {
       // 401 "Invalid email or password" (or a network error) is about the whole form.
       helpers.setStatus(toApiError(error).message)

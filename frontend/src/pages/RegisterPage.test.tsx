@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp } from '../tests/renderApp'
+import { ME, renderApp, userInfo, usersPage } from '../tests/renderApp'
 
 const VALID = {
   organization_name: 'Acme Insurance',
@@ -26,9 +26,11 @@ const submit = (user: UserEvent) => user.click(screen.getByRole('button', { name
 describe('RegisterPage', () => {
   test('a valid submit sends the right payload and lands in the app logged in', async () => {
     // Arrange
-    const { api, user } = renderApp('/register', (server) => {
-      server.onPost('/auth/register').reply(201, ME)
-      server.onGet('/auth/me').reply(200, ME)
+    const { api, user } = renderApp('/register', {
+      mockApi: (server) => {
+        server.onPost('/auth/register').reply(201, ME)
+        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+      },
     })
 
     // Act
@@ -72,8 +74,10 @@ describe('RegisterPage', () => {
   })
 
   test('"email already registered" from the server shows on the email field', async () => {
-    const { user } = renderApp('/register', (server) => {
-      server.onPost('/auth/register').reply(409, { message: 'This email is already registered' })
+    const { user } = renderApp('/register', {
+      mockApi: (server) => {
+        server.onPost('/auth/register').reply(409, { message: 'This email is already registered' })
+      },
     })
 
     await fillForm(user)
