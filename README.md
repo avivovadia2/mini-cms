@@ -23,7 +23,8 @@ brew services start postgresql@17
 ### 2. Database
 
 ```bash
-createdb mini_cms
+createdb mini_cms        # development
+createdb mini_cms_test   # tests: rebuilt from the migrations on every pytest run
 ```
 
 ### 3. Backend — http://localhost:5001
@@ -33,7 +34,7 @@ cd backend
 $(pyenv prefix 3.11)/bin/python -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 cp .env.example .env          # adjust DATABASE_URL if your Postgres needs a user/password
-.venv/bin/flask db upgrade    # apply migrations (none yet in M0)
+.venv/bin/flask db upgrade    # apply the migrations
 .venv/bin/flask run --debug
 ```
 
@@ -51,15 +52,18 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (5173, or the next free port). The page calls `/api/health` through the Vite proxy and shows
-the backend and database status.
+Open the URL Vite prints (5173, or the next free port) and register an organization. API calls go through the Vite
+proxy to the backend on 5001.
 
-### Lint / typecheck
+### Tests, lint, typecheck
 
 ```bash
-cd backend  && .venv/bin/ruff check . && .venv/bin/ruff format --check .
-cd frontend && npm run lint && npm run typecheck
+cd backend  && .venv/bin/pytest && .venv/bin/ruff check . && .venv/bin/ruff format --check .
+cd frontend && npm test && npm run lint && npm run typecheck
 ```
+
+Backend tests run against the real `mini_cms_test` Postgres database (override with `TEST_DATABASE_URL`). Frontend
+tests (Vitest + Testing Library) render the whole app in jsdom and mock only the network.
 
 ## Choices and why
 
@@ -76,24 +80,34 @@ other local servers). The port is set in `backend/.env` (`FLASK_RUN_PORT`).
 **Dev proxy instead of CORS.** Vite forwards `/api/*` to Flask, so the browser sees a single origin. No CORS
 configuration is needed, and the frontend uses relative URLs (`/api/...`), the same as when both are served together.
 
-**Backend structure: an app factory and blueprints, grouped by layer for now.**
+**Backend structure: the CMS's third-generation service modules, one per domain.**
 
 ```
 backend/app/
-  __init__.py     create_app(): config → extensions → blueprints → spectree
-  config.py       settings from environment variables
-  extensions.py   db, migrate, api_spec instances (imported by models/routes, no circular imports)
-  api/            Flask blueprint mounted at /api; one module per resource
+  __init__.py     create_app(): config → extensions → error handlers → modules → spectree
+  registry.py     ModuleRegistration + get_service(Interface): lazy singletons, constructor injection
+  errors.py       domain exceptions and the one place they become HTTP status codes
+  schemas.py      Pydantic types shared by all modules (pagination, required text)
+  modules/<name>/ organizations, users, auth
+    interface.py  the module's public API (ABC)
+    schemas/      Pydantic shapes in and out: data (`*Info`), requests, responses
+    api/          spectree routes; the only layer that commits
+    internal/     private: service (implements the interface), managers, models, exceptions
 backend/migrations/   Alembic (Flask-Migrate). Schema changes only through migrations, never db.create_all()
 ```
 
-The factory lets tests build an app with their own config. As resources arrive (M1+), each gets its route module in
-`api/`, plus models and Pydantic schemas, in the CMS's api / managers / models / schemas shape. That shape grows only
-when there's code to put in it, not ahead of time.
+Modules talk to each other only through `get_service(OtherInterface)` and schemas, never through each other's
+`internal/` or ORM models. See `backend/app/modules/__init__.py`.
+
+**Frontend structure.** `src/api/` (typed axios calls mirroring the backend schemas), `src/auth/` (the current user,
+loaded once and shared through React context; `RequireAuth` guards every route except Login and Register),
+`src/components/` (Base UI + Tailwind building blocks), `src/pages/`, and `src/validation.ts` (Yup rules that mirror
+the server's).
 
 **Health check also pings the database** (`SELECT 1`), and returns 503 if it can't reach it. A health check that only
 proves Flask is up would hide the most likely local problem, a database that isn't running.
 
-**Versions are pinned to the CMS** (Flask 2.3, SQLAlchemy 2.0, Flask-SQLAlchemy 3.1, Flask-Migrate 4.0, spectree 2.0,
-React 18.3, TypeScript 5.8, Vite 4, axios 0.21). Werkzeug is held on 2.3.x, the line released alongside Flask 2.3, rather than
+**Versions are pinned to the CMS** (Flask 2.3, SQLAlchemy 2.0, Flask-SQLAlchemy 3.1, Flask-Migrate 4.0, Flask-Login 0.6,
+spectree 2.0, React 18.3, TypeScript 5.8, Vite 4, axios 0.21, Base UI 1.8, Tailwind 3, Formik 2.4, Yup 0.32,
+react-router-dom 5.3, Vitest 2.1). Werkzeug is held on 2.3.x, the line released alongside Flask 2.3, rather than
 jumping to 3.x. ESLint stays on 8 (what the Vite 4 template uses), with typescript-eslint 8 so it understands TypeScript 5.8.
