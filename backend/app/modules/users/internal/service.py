@@ -11,3 +11,11 @@ class UsersService(UsersServiceInterface):
             organization_id=organization_id, email=email, full_name=full_name, password=password
         )
         return UserInfo.model_validate(user)
+
+    def get_user(self, user_id: int) -> UserInfo | None:
+        user = user_manager.get_user(user_id)
+        return UserInfo.model_validate(user) if user is not None else None
+
+    def check_credentials(self, email: str, password: str) -> UserInfo | None:
+        user = user_manager.check_credentials(email, password)
+        return UserInfo.model_validate(user) if user is not None else None

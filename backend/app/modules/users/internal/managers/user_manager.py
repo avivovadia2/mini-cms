@@ -23,3 +23,14 @@ def create_user(*, organization_id: int, email: str, full_name: str, password: s
     db.session.add(user)
     db.session.flush()  # assigns the id and the server defaults, without committing
     return user
+
+
+def get_user(user_id: int) -> User | None:
+    return db.session.get(User, user_id)
+
+
+def check_credentials(email: str, password: str) -> User | None:
+    user = db.session.scalar(db.select(User).where(User.email == normalize_email(email)))
+    if user is None or not security.check_password_hash(user.password_hash, password):
+        return None
+    return user

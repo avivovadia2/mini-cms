@@ -1,10 +1,3 @@
-from pydantic import BaseModel, ConfigDict
+from app.modules.organizations.schemas.organization import OrganizationInfo
 
-
-class OrganizationInfo(BaseModel):
-    """What other modules (and the API) get back: never the ORM model itself."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
+__all__ = ["OrganizationInfo"]

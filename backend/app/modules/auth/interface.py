@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.modules.auth.schemas import MeResponse, RegisterRequest
+from app.modules.auth.schemas import LoginRequest, MeResponse, RegisterRequest
 
 
 class AuthServiceInterface(ABC):
@@ -14,3 +14,16 @@ class AuthServiceInterface(ABC):
         created (e.g. the email is taken), the error propagates, nothing is committed, and no
         organization is left behind.
         """
+
+    @abstractmethod
+    def login(self, params: LoginRequest) -> MeResponse:
+        """Log the user in. Raises InvalidCredentialsError (an AuthenticationError) if the email
+        or password is wrong, or the user is inactive."""
+
+    @abstractmethod
+    def logout(self) -> None:
+        """End the current session."""
+
+    @abstractmethod
+    def get_me(self, user_id: int) -> MeResponse:
+        """The logged-in user and their organization."""
