@@ -20,7 +20,7 @@ A small claims app (policies → FNOL → claims → exposures) built on the sam
 Backend: Python 3.11, Flask 2.3, SQLAlchemy 2.0 / Flask-SQLAlchemy 3.1, Flask-Migrate 4.0 (Alembic),
 Flask-Login 0.6, spectree 2.0 + Pydantic 2, pytest 7.4, ruff 0.6, PostgreSQL 15+.
 
-Frontend: React 18.3, TypeScript 5.8, Vite 4, BaseUI 5 + Tailwind 3, Formik 2.4 + Yup 0.32, axios 0.21,
+Frontend: React 18.3, TypeScript 5.8, Vite 4, Base UI (`@base-ui/react` 1.8, what the CMS is migrating to from MUI 5) + Tailwind 3, Formik 2.4 + Yup 0.32, axios 0.21,
 react-router-dom 5.3, Vitest 2.1.
 
 ## Layout
