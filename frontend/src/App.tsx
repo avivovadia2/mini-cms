@@ -1,32 +1,50 @@
-import { useEffect, useState } from 'react'
-import { fetchHealth, HealthResponse } from './api/health'
+import { Redirect, Route, Switch } from 'react-router-dom'
 
-type HealthState =
-  | { kind: 'loading' }
-  | { kind: 'ok'; health: HealthResponse }
-  | { kind: 'error'; message: string }
+import { AuthProvider } from './auth/AuthProvider'
+import { RequireAuth } from './auth/RequireAuth'
+import { AppShell } from './components/AppShell'
+import { LoginPage } from './pages/LoginPage'
+import { PlaceholderPage } from './pages/PlaceholderPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { UsersPage } from './pages/users/UsersPage'
 
+// The router itself (BrowserRouter) is in main.tsx, so tests can render <App /> inside a
+// MemoryRouter instead and choose the starting URL.
 function App() {
-  const [state, setState] = useState<HealthState>({ kind: 'loading' })
-
-  useEffect(() => {
-    fetchHealth()
-      .then((health) => setState({ kind: 'ok', health }))
-      .catch((error: Error) => setState({ kind: 'error', message: error.message }))
-  }, [])
-
   return (
-    <main style={{ fontFamily: 'sans-serif', padding: 24 }}>
-      <h1>Mini CMS</h1>
-      {state.kind === 'loading' && <p>Checking backend…</p>}
-      {state.kind === 'ok' && (
-        <p data-testid="health-status">
-          Backend: <strong>{state.health.status}</strong> · Database:{' '}
-          <strong>{state.health.database}</strong>
-        </p>
-      )}
-      {state.kind === 'error' && <p role="alert">Backend unreachable: {state.message}</p>}
-    </main>
+    <AuthProvider>
+      <Switch>
+        {/* The only two routes without a session. */}
+        <Route path="/login">
+          <LoginPage />
+        </Route>
+        <Route path="/register">
+          <RegisterPage />
+        </Route>
+        {/* Everything else: needs a session, inside the app shell. */}
+        <Route>
+          <RequireAuth>
+            <AppShell>
+              <Switch>
+                <Route path="/fnol">
+                  <PlaceholderPage title="FNOL" milestone="M2" />
+                </Route>
+                <Route path="/claims">
+                  <PlaceholderPage title="Claims" milestone="M3" />
+                </Route>
+                <Route path="/policies">
+                  <PlaceholderPage title="Policies" milestone="M2" />
+                </Route>
+                <Route path="/users">
+                  <UsersPage />
+                </Route>
+                <Redirect to="/users" />
+              </Switch>
+            </AppShell>
+          </RequireAuth>
+        </Route>
+      </Switch>
+    </AuthProvider>
   )
 }
 
