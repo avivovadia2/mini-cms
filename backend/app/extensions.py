@@ -3,10 +3,14 @@
 Keeping them here (not in __init__.py) lets models and routes import `db` without circular imports.
 """
 
-from flask import jsonify
+import json
+from typing import Any
+
+from flask import Request, Response, jsonify
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from pydantic import ValidationError
 from spectree import SpecTree
 from sqlalchemy import MetaData
 
@@ -23,7 +27,29 @@ NAMING_CONVENTION = {
 db = SQLAlchemy(metadata=MetaData(naming_convention=NAMING_CONVENTION))
 migrate = Migrate()
 login_manager = LoginManager()
-api_spec = SpecTree("flask", title="Mini CMS API", version="0.1.0", path="api/docs")
+
+
+def _hide_input_in_validation_errors(
+    req: Request, resp: Response | None, req_validation_error: ValidationError | None, _: Any
+) -> None:
+    """Spectree's 422 body echoes each field's submitted value, including passwords. Rebuild it
+    with only the location, message and type of each error."""
+    if req_validation_error is not None and resp is not None:
+        errors = req_validation_error.errors(
+            include_input=False, include_url=False, include_context=False
+        )
+        resp.set_data(json.dumps(errors))
+
+
+# annotations=True: routes receive the validated body as a typed parameter (`json: XRequest`).
+api_spec = SpecTree(
+    "flask",
+    title="Mini CMS API",
+    version="0.1.0",
+    path="api/docs",
+    annotations=True,
+    before=_hide_input_in_validation_errors,
+)
 
 
 @login_manager.unauthorized_handler

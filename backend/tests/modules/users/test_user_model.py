@@ -24,6 +24,7 @@ def _new_user(organization: Organization, email: str = "dana@acme.com") -> User:
     )
 
 
+@pytest.mark.usefixtures("app_context")
 class TestUserTable:
     def test_database_fills_defaults_and_timestamps(self) -> None:
         user = _new_user(_create_organization())

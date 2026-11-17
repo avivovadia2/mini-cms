@@ -8,6 +8,7 @@ below maps the category to a status code. Routes never catch them.
 import logging
 
 from flask import Flask, Response, jsonify
+from pydantic import BaseModel
 from werkzeug.exceptions import HTTPException
 
 
@@ -33,6 +34,12 @@ class DomainValidationError(DomainError):
 
 class AuthenticationError(DomainError):
     """The caller could not be authenticated, e.g. wrong email or password."""
+
+
+class ErrorResponse(BaseModel):
+    """The body of every error response, for the OpenAPI docs."""
+
+    message: str
 
 
 STATUS_BY_ERROR: dict[type[DomainError], int] = {
