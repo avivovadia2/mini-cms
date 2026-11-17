@@ -1,13 +1,9 @@
 from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, Field, StringConstraints
+from pydantic import BaseModel, EmailStr, Field
 
 from app.modules.users.schemas import Password
-
-# Required text: surrounding whitespace removed, then at least one character left.
-RequiredText = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
-]
+from app.schemas import RequiredText
 
 
 class RegisterRequest(BaseModel):

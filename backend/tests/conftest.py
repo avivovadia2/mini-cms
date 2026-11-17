@@ -10,6 +10,7 @@
 """
 
 from collections.abc import Callable, Iterator
+from typing import Any
 
 import pytest
 from flask import Flask
@@ -63,3 +64,27 @@ def db_read(app: Flask) -> Callable[[], AppContext]:
 def client(app: Flask) -> FlaskClient:
     """A client with no session. Each test gets its own (cookies are not shared between tests)."""
     return app.test_client()
+
+
+@pytest.fixture
+def registered_client(app: Flask) -> Callable[..., tuple[FlaskClient, dict[str, Any]]]:
+    """Register a new organization through the API; returns its logged-in client and `me` body.
+
+    Call it twice for two organizations: `client_a, me_a = registered_client("Acme", "a@acme.com")`.
+    """
+
+    def register(organization_name: str, email: str) -> tuple[FlaskClient, dict[str, Any]]:
+        client = app.test_client()
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "organization_name": organization_name,
+                "full_name": "First User",
+                "email": email,
+                "password": "correct-horse",
+            },
+        )
+        assert response.status_code == 201
+        return client, response.get_json()
+
+    return register

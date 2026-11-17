@@ -3,7 +3,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 # The password rule lives here, with the module that owns users; every request schema that takes
-# a password (register now, "add user" in M1 2/4) uses this type instead of repeating the rule.
+# a password (register, add user) uses this type instead of repeating the rule.
 Password = Annotated[str, Field(min_length=8, max_length=128)]
 
 
