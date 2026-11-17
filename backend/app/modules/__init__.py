@@ -14,11 +14,12 @@
 To add a module, define `registration` in its __init__.py and append it to MODULE_REGISTRATIONS.
 """
 
-from app.modules import auth, organizations, users
+from app.modules import auth, organizations, policies, users
 from app.registry import ModuleRegistration
 
 MODULE_REGISTRATIONS: list[ModuleRegistration] = [
     organizations.registration,
     users.registration,
     auth.registration,
+    policies.registration,
 ]
