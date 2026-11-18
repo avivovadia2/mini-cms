@@ -85,6 +85,18 @@ def list_policies(organization_id: int, params: PolicyListParams) -> tuple[list[
     return list(policies), total_count
 
 
+def get_policies(organization_id: int, policy_ids: set[int]) -> list[Policy]:
+    if not policy_ids:
+        return []  # skip the query entirely
+    return list(
+        db.session.scalars(
+            db.select(Policy).where(
+                Policy.organization_id == organization_id, Policy.id.in_(policy_ids)
+            )
+        )
+    )
+
+
 def find_by_policy_number(organization_id: int, policy_number: str) -> Policy | None:
     return db.session.scalar(
         db.select(Policy).where(

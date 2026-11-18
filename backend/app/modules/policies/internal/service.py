@@ -29,6 +29,10 @@ class PoliciesService(PoliciesServiceInterface):
             total_count=total_count,
         )
 
+    def get_policies(self, organization_id: int, policy_ids: set[int]) -> dict[int, PolicyInfo]:
+        policies = policy_manager.get_policies(organization_id, policy_ids)
+        return {policy.id: PolicyInfo.model_validate(policy) for policy in policies}
+
     def find_by_policy_number(self, organization_id: int, policy_number: str) -> PolicyInfo | None:
         policy = policy_manager.find_by_policy_number(organization_id, policy_number)
         return PolicyInfo.model_validate(policy) if policy is not None else None

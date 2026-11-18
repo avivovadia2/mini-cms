@@ -40,5 +40,12 @@ class PoliciesServiceInterface(ABC):
         """One page of the organization's policies, newest first, with the total count."""
 
     @abstractmethod
+    def get_policies(self, organization_id: int, policy_ids: set[int]) -> dict[int, PolicyInfo]:
+        """Several policies in one query, keyed by id; ids of other organizations are left out.
+
+        For lists in other modules (e.g. FNOLs with their matched policy) without N+1 queries.
+        """
+
+    @abstractmethod
     def find_by_policy_number(self, organization_id: int, policy_number: str) -> PolicyInfo | None:
         """The organization's policy with this number, ignoring case, or None. For FNOL matching."""

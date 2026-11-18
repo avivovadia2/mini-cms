@@ -2,7 +2,7 @@
 
 from typing import Annotated, Generic, TypeVar
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, BeforeValidator, EmailStr, Field, StringConstraints
 
 T = TypeVar("T")
 
@@ -10,6 +10,23 @@ T = TypeVar("T")
 RequiredText = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
 ]
+
+# Free text such as a loss description or a rejection reason: required, up to 5,000 characters.
+LongText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=5000)]
+
+
+def _blank_to_none(value: object) -> object:
+    """An optional field left empty in a form arrives as "" (or spaces): store it as null."""
+    if isinstance(value, str) and not value.strip():
+        return None
+    return value
+
+
+OptionalText = Annotated[
+    Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)] | None,
+    BeforeValidator(_blank_to_none),
+]
+OptionalEmail = Annotated[EmailStr | None, BeforeValidator(_blank_to_none)]
 
 MAX_PAGE_SIZE = 100
 
