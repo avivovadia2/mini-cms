@@ -9,11 +9,9 @@ A small claims app (policies → FNOL → claims → exposures) built on the sam
 
 ## How Claude should help (important)
 
-- **Mix mode:** Claude may scaffold boilerplate (configs, tooling, app wiring, build setup). The author writes the
-  business logic, models, migrations' content decisions, API schemas, and tests. When a task touches those, explain the
-  approach, point to CMS patterns, and review — don't just generate the solution unless explicitly asked.
-- Whatever Claude writes must be small and explainable; walk through it after writing.
-- Never copy CMS code. Reading it for patterns is fine.
+- Claude may write any of the code (models, logic, API, tests, tooling). After writing, walk the author through it
+  so they can explain every line in review — keep it small and explainable.
+- **Never copy CMS code.** Read the CMS (`~/projects/github/cms`) for patterns and conventions, then write original code.
 - No over-engineering: no generic repositories, plugin systems, or abstract base classes nothing needs.
   Three similar lines beat a premature abstraction.
 
@@ -22,15 +20,25 @@ A small claims app (policies → FNOL → claims → exposures) built on the sam
 Backend: Python 3.11, Flask 2.3, SQLAlchemy 2.0 / Flask-SQLAlchemy 3.1, Flask-Migrate 4.0 (Alembic),
 Flask-Login 0.6, spectree 2.0 + Pydantic 2, pytest 7.4, ruff 0.6, PostgreSQL 15+.
 
-Frontend: React 18.3, TypeScript 5.8, Vite 4, BaseUI 5 + Tailwind 3, Formik 2.4 + Yup 0.32, axios 0.21,
+Frontend: React 18.3, TypeScript 5.8, Vite 4, Base UI (`@base-ui/react` 1.8, what the CMS is migrating to from MUI 5) + Tailwind 3, Formik 2.4 + Yup 0.32, axios 0.21,
 react-router-dom 5.3, Vitest 2.1.
 
 ## Layout
 
 ```
-backend/    Flask app (app factory in app/__init__.py), migrations/, requirements.txt, pyproject.toml (ruff)
+backend/    Flask app (app factory in app/__init__.py), migrations/, tests/, requirements.txt, pyproject.toml (ruff)
 frontend/   Vite + React + TS app; dev server proxies /api to the backend
 ```
+
+Backend follows the CMS's **third-generation service modules** (see `backend/app/modules/__init__.py`):
+- One module per domain under `app/modules/<name>/`: `interface.py` (ABC), `schemas/`, `api/`, and a private
+  `internal/` (`service.py`, `managers/`, `models/`, `exceptions.py`).
+- Outside a module, only its `interface` and `schemas` may be imported — never `internal/`. Services are fetched with
+  `get_service(Interface)` from `app/registry.py` (deliberately no `@inject`/`Depends()`, permissions or events).
+- Each module exposes a `ModuleRegistration` that is listed in `MODULE_REGISTRATIONS`.
+- Managers never commit; the API layer commits. Current org comes from `current_user.organization_id`.
+- Tests: `backend/tests/modules/<name>/test_*.py`, `class Test<Thing>:` / `def test_<behaviour>`. The test DB
+  (`mini_cms_test`) is rebuilt from the migrations once per session and truncated after each test.
 
 ## Commands
 
@@ -48,6 +56,8 @@ Frontend (from `frontend/`):
 ## Rules the code must follow (from the spec)
 
 - Schema changes only through Alembic migrations — never `db.create_all()`. One migration per milestone PR.
+- Models use the CMS style: `db.Column(...)` with explicit `nullable=False` and `id` declared in each model
+  (not `Mapped`/`mapped_column`). `TimestampMixin` (`app/db_base.py`) adds `created_at`/`updated_at`.
 - All API routes live under `/api`, are declared with spectree, and use Pydantic request/response models.
 - Multi-tenancy: every table except `organization` has `organization_id`; every query is scoped to the current
   user's org. Another org's resource → **404**, never 403. A cross-org data leak is a project failure.

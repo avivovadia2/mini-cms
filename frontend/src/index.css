@@ -1,0 +1,4 @@
+/* Tailwind's three layers: base (a CSS reset), components, and the utility classes we use. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
