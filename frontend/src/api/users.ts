@@ -1,7 +1,7 @@
 import { apiClient } from './client'
+import type { Page } from './page'
 
-// Mirror the backend schemas: UserInfo and AddUserRequest (app/modules/users/schemas) and
-// Page (app/schemas.py).
+// Mirror the backend schemas: UserInfo and AddUserRequest (app/modules/users/schemas).
 
 export interface UserInfo {
   id: number
@@ -9,11 +9,6 @@ export interface UserInfo {
   email: string
   full_name: string
   is_active: boolean
-}
-
-export interface Page<T> {
-  results: T[]
-  total_count: number
 }
 
 export interface AddUserRequest {

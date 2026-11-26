@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp, userInfo, usersPage } from '../tests/renderApp'
+import { ME, renderApp, userInfo, pageOf } from '../tests/renderApp'
 
 describe('protected routes', () => {
   test.each(['/users', '/claims', '/policies', '/fnol', '/'])(
@@ -18,7 +18,7 @@ describe('protected routes', () => {
     renderApp('/users', {
       me: ME,
       mockApi: (server) => {
-        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+        server.onGet('/users').reply(200, pageOf([userInfo(1)]))
       },
     })
 

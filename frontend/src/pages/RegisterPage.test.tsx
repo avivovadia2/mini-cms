@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp, userInfo, usersPage } from '../tests/renderApp'
+import { ME, renderApp, userInfo, pageOf } from '../tests/renderApp'
 
 const VALID = {
   organization_name: 'Acme Insurance',
@@ -29,7 +29,7 @@ describe('RegisterPage', () => {
     const { api, user } = renderApp('/register', {
       mockApi: (server) => {
         server.onPost('/auth/register').reply(201, ME)
-        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+        server.onGet('/users').reply(200, pageOf([userInfo(1)]))
       },
     })
 

@@ -8,14 +8,13 @@ interface ButtonProps {
   onClick?: () => void
 }
 
+// Exported so a link that looks like a button (e.g. "New policy") uses the same style.
+export const buttonClassName =
+  'rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 data-[disabled]:opacity-50'
+
 export function Button({ children, type = 'button', disabled, onClick }: ButtonProps) {
   return (
-    <BaseButton
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 data-[disabled]:opacity-50"
-    >
+    <BaseButton type={type} disabled={disabled} onClick={onClick} className={buttonClassName}>
       {children}
     </BaseButton>
   )

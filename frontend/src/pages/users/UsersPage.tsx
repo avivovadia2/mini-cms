@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { listUsers, type Page, type UserInfo } from '../../api/users'
-import { Button } from '../../components/Button'
+import type { Page } from '../../api/page'
+import { listUsers, type UserInfo } from '../../api/users'
 import { FormError } from '../../components/FormError'
+import { Pagination } from '../../components/Pagination'
 import { AddUserForm } from './AddUserForm'
 
 const PAGE_SIZE = 20
@@ -28,8 +29,6 @@ export function UsersPage() {
       ignore = true
     }
   }, [pageNumber, reloadKey])
-
-  const pageCount = page ? Math.max(1, Math.ceil(page.total_count / PAGE_SIZE)) : 1
 
   return (
     <div className="flex flex-col gap-8">
@@ -58,20 +57,13 @@ export function UsersPage() {
                 ))}
               </tbody>
             </table>
-            <div className="flex items-center gap-4 text-sm">
-              <Button disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
-                Previous
-              </Button>
-              <span>
-                Page {pageNumber} of {pageCount} · {page.total_count} users
-              </span>
-              <Button
-                disabled={pageNumber >= pageCount}
-                onClick={() => setPageNumber(pageNumber + 1)}
-              >
-                Next
-              </Button>
-            </div>
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={PAGE_SIZE}
+              totalCount={page.total_count}
+              noun="users"
+              onPageChange={setPageNumber}
+            />
           </>
         )}
       </section>

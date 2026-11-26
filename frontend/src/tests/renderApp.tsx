@@ -6,7 +6,10 @@ import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 import type { MeResponse } from '../api/auth'
 import { apiClient } from '../api/client'
-import type { Page, UserInfo } from '../api/users'
+import type { FnolInfo } from '../api/fnol'
+import type { Page } from '../api/page'
+import type { PolicyInfo } from '../api/policies'
+import type { UserInfo } from '../api/users'
 
 interface RenderAppOptions {
   // The session the app finds when it starts (its first call is GET /auth/me). null: logged out.
@@ -56,6 +59,44 @@ export function userInfo(id: number, overrides: Partial<UserInfo> = {}): UserInf
   }
 }
 
-export function usersPage(users: UserInfo[], totalCount = users.length): Page<UserInfo> {
-  return { results: users, total_count: totalCount }
+export function policyInfo(id: number, overrides: Partial<PolicyInfo> = {}): PolicyInfo {
+  return {
+    id,
+    organization_id: ME.organization.id,
+    policy_number: `POL-${id}`,
+    insured_name: `Insured ${id}`,
+    line_of_business: 'auto',
+    effective_date: '2026-01-01',
+    expiration_date: '2027-01-01',
+    status: 'active',
+    ...overrides,
+  }
+}
+
+// An FNOL as the API returns it; unmatched unless a `policy` is given in the overrides.
+export function fnolInfo(id: number, overrides: Partial<FnolInfo> = {}): FnolInfo {
+  const policy = overrides.policy ?? null
+  return {
+    id,
+    organization_id: ME.organization.id,
+    reported_policy_number: `POL-${id}`,
+    policy_id: policy?.id ?? null,
+    reporter_name: `Reporter ${id}`,
+    reporter_email: null,
+    reporter_phone: null,
+    loss_date: '2026-03-10',
+    loss_description: 'Rear-ended at a traffic light.',
+    loss_state: null,
+    status: 'submitted',
+    rejection_reason: null,
+    submitted_by_id: ME.id,
+    created_at: '2026-03-11T09:00:00+00:00',
+    ...overrides,
+    policy,
+  }
+}
+
+// Any list endpoint's answer: these items, and (by default) no more pages.
+export function pageOf<T>(items: T[], totalCount = items.length): Page<T> {
+  return { results: items, total_count: totalCount }
 }

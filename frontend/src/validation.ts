@@ -14,3 +14,12 @@ export const newPassword = yup
   .required('Password is required')
   .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password is too long')
+
+// Today as "YYYY-MM-DD" in the user's own time zone: what a date input shows as today.
+// (toISOString() would give the UTC date, which is tomorrow or yesterday near midnight.)
+export function todayIso(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0') // getMonth() counts from 0
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
