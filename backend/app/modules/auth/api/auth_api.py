@@ -9,7 +9,7 @@ from app.modules.auth.internal.session_user import load_session_user
 from app.modules.auth.schemas import LoginRequest, MeResponse, RegisterRequest
 from app.registry import get_service
 
-bp = Blueprint("auth", __name__, url_prefix="/api/auth")
+bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 login_manager.user_loader(load_session_user)
 

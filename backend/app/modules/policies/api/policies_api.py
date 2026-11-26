@@ -14,7 +14,7 @@ from app.modules.policies.schemas import (
 from app.registry import get_service
 from app.schemas import Page
 
-bp = Blueprint("policies", __name__, url_prefix="/api/policies")
+bp = Blueprint("policies", __name__, url_prefix="/policies")
 
 # Every route: @login_required first (401 without a session), and the organization always comes
 # from current_user, never from the URL or the body.
