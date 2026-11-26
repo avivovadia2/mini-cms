@@ -4,7 +4,8 @@
         __init__.py        exports the interface and `registration` (a ModuleRegistration)
         interface.py       abstract service class (ABC): the module's public API
         schemas/           Pydantic models going in and out of the interface and the API
-        api/               Flask blueprint + spectree routes; calls the service, commits the session
+        api/               Flask blueprint + spectree routes; calls the service, commits
+                           the session. Prefix: its own part only ("/users"); create_app adds /api
         internal/          private; never imported from outside the module
             service.py     implements the interface
             managers/      business logic and queries; never commits
@@ -14,7 +15,7 @@
 To add a module, define `registration` in its __init__.py and append it to MODULE_REGISTRATIONS.
 """
 
-from app.modules import auth, organizations, policies, users
+from app.modules import auth, fnol, organizations, policies, users
 from app.registry import ModuleRegistration
 
 MODULE_REGISTRATIONS: list[ModuleRegistration] = [
@@ -22,4 +23,5 @@ MODULE_REGISTRATIONS: list[ModuleRegistration] = [
     users.registration,
     auth.registration,
     policies.registration,
+    fnol.registration,
 ]
