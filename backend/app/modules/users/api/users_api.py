@@ -9,7 +9,7 @@ from app.modules.users.schemas import AddUserRequest, UserInfo
 from app.registry import get_service
 from app.schemas import Page, PageParams
 
-bp = Blueprint("users", __name__, url_prefix="/api/users")
+bp = Blueprint("users", __name__, url_prefix="/users")
 
 # Every route: @login_required first (401 without a session), and the organization always comes
 # from current_user, never from the URL or the body.

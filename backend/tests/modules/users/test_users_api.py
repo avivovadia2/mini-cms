@@ -1,12 +1,10 @@
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from typing import Any
 
 import pytest
-from flask import Flask
 from flask.ctx import AppContext
 from flask.testing import FlaskClient
-from sqlalchemy import event
 from werkzeug import security
 
 from app.extensions import db
@@ -15,6 +13,7 @@ from app.modules.users.internal.models.user import User
 USERS_URL = "/api/users"
 
 RegisteredClient = Callable[..., tuple[FlaskClient, dict[str, Any]]]
+CountQueries = Callable[[], AbstractContextManager[list[str]]]
 
 
 def _add_user_payload(**overrides: Any) -> dict[str, Any]:
@@ -33,23 +32,6 @@ def _add_users(client: FlaskClient, count: int) -> list[dict[str, Any]]:
         assert response.status_code == 201
         added.append(response.get_json())
     return added
-
-
-@contextmanager
-def _count_queries(app: Flask) -> Iterator[list[str]]:
-    """Collect every SQL statement sent to the database while the block runs."""
-    statements: list[str] = []
-
-    def record(conn, cursor, statement, *args) -> None:
-        statements.append(statement)
-
-    with app.app_context():
-        engine = db.engine
-    event.listen(engine, "before_cursor_execute", record)
-    try:
-        yield statements
-    finally:
-        event.remove(engine, "before_cursor_execute", record)
 
 
 class TestListUsers:
@@ -99,14 +81,14 @@ class TestListUsers:
         assert response.status_code == 422
 
     def test_runs_the_same_number_of_queries_whatever_the_page_size(
-        self, app: Flask, registered_client: RegisteredClient
+        self, registered_client: RegisteredClient, count_queries: CountQueries
     ) -> None:
         client, _ = registered_client("Acme", "dana@acme.com")
         _add_users(client, 9)
 
-        with _count_queries(app) as one_user:
+        with count_queries() as one_user:
             client.get(USERS_URL, query_string={"page_size": 1})
-        with _count_queries(app) as ten_users:
+        with count_queries() as ten_users:
             client.get(USERS_URL, query_string={"page_size": 10})
 
         # No N+1: listing 10 users costs no more queries than listing 1.

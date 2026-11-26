@@ -24,11 +24,17 @@ export function toApiError(error: unknown): ApiError {
   const { status, data } = error.response
   if (Array.isArray(data)) {
     const fieldErrors: Record<string, string> = {}
+    let message = 'Some fields are invalid.'
     for (const item of data as ValidationErrorItem[]) {
-      const field = String(item.loc[0])
-      fieldErrors[field] ??= item.msg
+      if (item.loc.length === 0) {
+        // A rule about the whole request, e.g. "expiration_date must be after effective_date":
+        // there is no field to show it under, so it becomes the form's message.
+        message = item.msg
+      } else {
+        fieldErrors[String(item.loc[0])] ??= item.msg
+      }
     }
-    return { status, message: 'Some fields are invalid.', fieldErrors }
+    return { status, message, fieldErrors }
   }
   const message = (data as Partial<MessageBody> | undefined)?.message
   return { status, message: message ?? 'Something went wrong. Try again.', fieldErrors: {} }

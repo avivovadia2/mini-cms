@@ -10,6 +10,7 @@
 """
 
 from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from typing import Any
 
 import pytest
@@ -17,7 +18,7 @@ from flask import Flask
 from flask.ctx import AppContext
 from flask.testing import FlaskClient
 from flask_migrate import upgrade
-from sqlalchemy import text
+from sqlalchemy import event, text
 
 from app import create_app
 from app.config import TestConfig
@@ -88,3 +89,30 @@ def registered_client(app: Flask) -> Callable[..., tuple[FlaskClient, dict[str, 
         return client, response.get_json()
 
     return register
+
+
+@pytest.fixture
+def count_queries(app: Flask) -> Callable[[], AbstractContextManager[list[str]]]:
+    """Collect every SQL statement sent while a block runs, to prove a list has no N+1:
+
+    with count_queries() as statements:
+        client.get(...)
+    assert len(statements) == ...
+    """
+    with app.app_context():
+        engine = db.engine
+
+    @contextmanager
+    def counting() -> Iterator[list[str]]:
+        statements: list[str] = []
+
+        def record(conn, cursor, statement, *args) -> None:
+            statements.append(statement)
+
+        event.listen(engine, "before_cursor_execute", record)
+        try:
+            yield statements
+        finally:
+            event.remove(engine, "before_cursor_execute", record)
+
+    return counting

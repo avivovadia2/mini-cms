@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp, userInfo, usersPage } from '../tests/renderApp'
+import { ME, renderApp, userInfo, pageOf } from '../tests/renderApp'
 
 async function logIn(user: UserEvent, email: string, password: string) {
   await user.type(screen.getByLabelText('Email'), email)
@@ -28,7 +28,7 @@ describe('LoginPage', () => {
     const { api, user } = renderApp('/login', {
       mockApi: (server) => {
         server.onPost('/auth/login').reply(200, ME)
-        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+        server.onGet('/users').reply(200, pageOf([userInfo(1)]))
       },
     })
 

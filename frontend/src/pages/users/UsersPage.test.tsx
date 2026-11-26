@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ME, renderApp, userInfo, usersPage } from '../../tests/renderApp'
+import { ME, renderApp, userInfo, pageOf } from '../../tests/renderApp'
 
 async function fillAddUserForm(user: UserEvent, values: Record<string, string>) {
   const form = screen.getByRole('form', { name: 'Add user' })
@@ -19,7 +19,7 @@ describe('UsersPage', () => {
       mockApi: (server) => {
         server
           .onGet('/users')
-          .reply(200, usersPage([userInfo(1), userInfo(2, { is_active: false })]))
+          .reply(200, pageOf([userInfo(1), userInfo(2, { is_active: false })]))
       },
     })
 
@@ -37,9 +37,9 @@ describe('UsersPage', () => {
       me: ME,
       mockApi: (server) => {
         server.onGet('/users', { params: { page_number: 1, page_size: 20 } })
-          .reply(200, usersPage([userInfo(1)], 25))
+          .reply(200, pageOf([userInfo(1)], 25))
         server.onGet('/users', { params: { page_number: 2, page_size: 20 } })
-          .reply(200, usersPage([userInfo(21)], 25))
+          .reply(200, pageOf([userInfo(21)], 25))
       },
     })
     await screen.findByText('Page 1 of 2 · 25 users')
@@ -56,7 +56,7 @@ describe('UsersPage', () => {
     const { api, user } = renderApp('/users', {
       me: ME,
       mockApi: (server) => {
-        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+        server.onGet('/users').reply(200, pageOf([userInfo(1)]))
       },
     })
     await screen.findByText('User 1')
@@ -82,7 +82,7 @@ describe('UsersPage', () => {
         server.onGet('/users').reply(() => {
           listCalls += 1
           const users = listCalls === 1 ? [userInfo(1)] : [userInfo(1), userInfo(2)]
-          return [200, usersPage(users)]
+          return [200, pageOf(users)]
         })
         server.onPost('/users').reply(201, userInfo(2))
       },
@@ -109,7 +109,7 @@ describe('UsersPage', () => {
     const { user } = renderApp('/users', {
       me: ME,
       mockApi: (server) => {
-        server.onGet('/users').reply(200, usersPage([userInfo(1)]))
+        server.onGet('/users').reply(200, pageOf([userInfo(1)]))
         server.onPost('/users').reply(409, { message: 'This email is already registered' })
       },
     })

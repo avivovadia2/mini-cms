@@ -88,7 +88,7 @@ backend/app/
   registry.py     ModuleRegistration + get_service(Interface): lazy singletons, constructor injection
   errors.py       domain exceptions and the one place they become HTTP status codes
   schemas.py      Pydantic types shared by all modules (pagination, required text)
-  modules/<name>/ organizations, users, auth
+  modules/<name>/ organizations, users, auth, policies, fnol
     interface.py  the module's public API (ABC)
     schemas/      Pydantic shapes in and out: data (`*Info`), requests, responses
     api/          spectree routes; the only layer that commits
@@ -101,8 +101,8 @@ Modules talk to each other only through `get_service(OtherInterface)` and schema
 
 **Frontend structure.** `src/api/` (typed axios calls mirroring the backend schemas), `src/auth/` (the current user,
 loaded once and shared through React context; `RequireAuth` guards every route except Login and Register),
-`src/components/` (Base UI + Tailwind building blocks), `src/pages/`, and `src/validation.ts` (Yup rules that mirror
-the server's).
+`src/components/` (Base UI + Tailwind building blocks: form fields, buttons, pagination), `src/pages/` (one folder
+per area: `users/`, `policies/`, `fnol/`), and `src/validation.ts` (Yup rules that mirror the server's).
 
 **Health check also pings the database** (`SELECT 1`), and returns 503 if it can't reach it. A health check that only
 proves Flask is up would hide the most likely local problem, a database that isn't running.
